@@ -12,6 +12,7 @@ from ipaddress import ip_network, ip_address
 from scapy.all import ARP, Ether, srp
 import dns.resolver
 import dns.reversename
+import sys
 
 def get_local_ip():
     hostname = socket.gethostname()
@@ -43,7 +44,7 @@ def ping(ip):
         # Execute the ping command and check the result
         result = subprocess.run(['ping', '-n', '1', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
         end_time = time.time()
-        elapsed_time = math.floor((end_time - start_time) * 10000) / 10  # Convert to milliseconds and floor to the nearest tenth
+        elapsed_time = math.floor((end_time - start_time) * 1000)  # Convert to milliseconds and floor to the nearest tenth
         if result.returncode == 0:
             mac_address = get_mac_address(ip)
             return 'UP', elapsed_time, mac_address
@@ -51,7 +52,7 @@ def ping(ip):
             return 'DOWN', elapsed_time, 'N/A'
     except subprocess.TimeoutExpired:
         end_time = time.time()
-        elapsed_time = math.floor((end_time - start_time) * 10000) / 10  # Convert to milliseconds and floor to the nearest tenth
+        elapsed_time = math.floor((end_time - start_time) * 1000)  # Convert to milliseconds and floor to the nearest tenth
         return 'ERROR (Connection timeout)', elapsed_time, 'N/A'
 
 def reverse_dns_lookup(ip):
@@ -84,42 +85,44 @@ def export_to_csv(results, filename='scan_results.csv'):
         dict_writer.writeheader()
         dict_writer.writerows(results)
 
-def main():
-    # Get user input for the IP range, with default value
-    local_ip = get_local_ip()
-    network_range = get_network_range(local_ip)
-    default_range = f"{network_range.network_address}/{network_range.prefixlen}"
-    ip_range_input = input(f"Enter the IP range to scan (default is {default_range}): ") or default_range
+a = sys.argv[1]
 
-    print(f"DEBUG: User input IP range: {ip_range_input}")
+print(a)
 
-    try:
-        # Parse the network range
-        ip_range = ip_network(ip_range_input, strict=False)
-        print(f"DEBUG: Parsed network range: {ip_range}")
-    except ValueError as e:
-        print(f"ERROR: Invalid IP range: {e}")
-        return
 
-    # Start time
-    total_start_time = time.time()
+# Get user input for the IP range, with default value
+local_ip = get_local_ip()
+network_range = get_network_range(local_ip)
+default_range = f"{network_range.network_address}/{network_range.prefixlen}"
+ip_range_input = a
 
-    # Scan the network
-    print(f"Scanning network {ip_range}...\n")
-    results = scan_network(ip_range)
+print(f"DEBUG: User input IP range: {ip_range_input}")
 
-    # End time
-    total_end_time = time.time()
-    total_elapsed_time = math.floor((total_end_time - total_start_time) * 10000) / 10  # Convert to milliseconds and floor to the nearest tenth
+try:
+    # Parse the network range
+    ip_range = ip_network(ip_range_input, strict=False)
+    print(f"DEBUG: Parsed network range: {ip_range}")
+except ValueError as e:
+    print(f"ERROR: Invalid IP range: {e}")
+    
 
-    # Export results to CSV
-    export_to_csv(results)
-    print("\nResults exported to scan_results.csv")
-    print(f"\nTotal scan completed in {total_elapsed_time:.1f} ms.")
-    active_hosts = sum(1 for result in results if result['Status'] == 'UP')
-    down_hosts = sum(1 for result in results if result['Status'] == 'DOWN')
-    errors = sum(1 for result in results if 'ERROR' in result['Status'])
-    print(f"Scan complete. Found {active_hosts} active hosts, {down_hosts} down, {errors} errors")
+# Start time
+total_start_time = time.time()
 
-if __name__ == "__main__":
-    main()
+# Scan the network
+print(f"Scanning network {ip_range}...\n")
+results = scan_network(ip_range)
+
+# End time
+total_end_time = time.time()
+total_elapsed_time = math.floor((total_end_time - total_start_time) * 1000)  # Convert to milliseconds and floor to the nearest tenth
+
+# Export results to CSV
+export_to_csv(results)
+print("\nResults exported to scan_results.csv")
+print(f"\nTotal scan completed in {total_elapsed_time:.1f} ms.")
+active_hosts = sum(1 for result in results if result['Status'] == 'UP')
+down_hosts = sum(1 for result in results if result['Status'] == 'DOWN')
+errors = sum(1 for result in results if 'ERROR' in result['Status'])
+print(f"Scan complete. Found {active_hosts} active hosts, {down_hosts} down, {errors} errors")
+
