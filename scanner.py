@@ -14,16 +14,15 @@ import dns.resolver
 import dns.reversename
 import sys
 
-def get_local_ip():
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
-    return local_ip
-
-def get_network_range(ip):
-    # Determine the network range based on local IP
-    ip_addr = ip_address(ip)
-    network = ip_network(ip_addr, strict=False)
-    return network
+# def get_local_ip():
+#     hostname = socket.gethostname()
+#     local_ip = socket.gethostbyname(hostname)
+#     return local_ip
+# def get_network_range(ip):
+#     # Determine the network range based on local IP
+#     ip_addr = ip_address(ip)
+#     network = ip_network(ip_addr, strict=False)
+#     return network
 
 def scan_network(ip_range):
     results = []
@@ -34,7 +33,6 @@ def scan_network(ip_range):
         status_output = format_status(ip_str, result, elapsed_time, hostname, mac_address)
         print(status_output)
         results.append({'IP': ip_str, 'Status': result, 'Time': elapsed_time, 'Hostname': hostname, 'MAC': mac_address})
-
     return results
 
 def ping(ip):
@@ -86,37 +84,27 @@ def export_to_csv(results, filename='scan_results.csv'):
         dict_writer.writerows(results)
 
 a = sys.argv[1]
-
 print(a)
-
-
-# Get user input for the IP range, with default value
-local_ip = get_local_ip()
-network_range = get_network_range(local_ip)
-default_range = f"{network_range.network_address}/{network_range.prefixlen}"
+# # Get user input for the IP range, with default value
+# local_ip = get_local_ip()
+# network_range = get_network_range(local_ip)
+# default_range = f"{network_range.network_address}/{network_range.prefixlen}"
 ip_range_input = a
-
 print(f"DEBUG: User input IP range: {ip_range_input}")
-
 try:
     # Parse the network range
     ip_range = ip_network(ip_range_input, strict=False)
     print(f"DEBUG: Parsed network range: {ip_range}")
 except ValueError as e:
     print(f"ERROR: Invalid IP range: {e}")
-    
-
 # Start time
 total_start_time = time.time()
-
 # Scan the network
 print(f"Scanning network {ip_range}...\n")
 results = scan_network(ip_range)
-
 # End time
 total_end_time = time.time()
 total_elapsed_time = math.floor((total_end_time - total_start_time) * 1000)  # Convert to milliseconds and floor to the nearest tenth
-
 # Export results to CSV
 export_to_csv(results)
 print("\nResults exported to scan_results.csv")
@@ -125,4 +113,3 @@ active_hosts = sum(1 for result in results if result['Status'] == 'UP')
 down_hosts = sum(1 for result in results if result['Status'] == 'DOWN')
 errors = sum(1 for result in results if 'ERROR' in result['Status'])
 print(f"Scan complete. Found {active_hosts} active hosts, {down_hosts} down, {errors} errors")
-
