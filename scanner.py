@@ -74,7 +74,7 @@ def format_status(ip, status, elapsed_time, hostname, mac_address):
     elif status == 'DOWN':
         return f"{ip} - {status} (NO response)"
     else:
-        return f"{ip} - {status}"
+        return f"{ip} - {status} (Timed out)"
 
 def export_to_csv(results, filename='scan_results.csv'):
     keys = results[0].keys()
