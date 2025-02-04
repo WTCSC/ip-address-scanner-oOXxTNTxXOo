@@ -1,5 +1,7 @@
 #scans ip address for address and pings for information on up or down
 
+# python scan.py 192.168.1.0/24
+
 # pip install scapy dnspython
 
 import subprocess
@@ -12,10 +14,14 @@ from scapy.all import ARP, Ether, srp
 import dns.resolver
 import dns.reversename
 
-# a = sys.argv[1]
-# b = sys.argv[2]
+a = sys.argv[1] # ip range to scan 
+b = sys.argv[2] # save to csv 
 
-def scan_net(ip_range):
+def scan_net():
+    ip_range = ip_network(a, strict=False)
+    print(f"DEBUG: User input IP range: {ip_range}")
+    
+
     results = []
     for ip in ip_range.hosts():
         ip_str = str(ip)
@@ -60,9 +66,15 @@ def format_output(ip, status, elapsed_time, hostname, mac_address):
     else:
         return f"{ip} - {status}"
 
-def csv_export():
+def csv_export(result):
+    filename = "scan_results.csv"
+    ipKey = result[0].keys()
+    with open(filename, 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, fieldnames=ipKey)
+        dict_writer.writeheader()
+        dict_writer.writerows(result)
 
-    return
+    
 
 
 
